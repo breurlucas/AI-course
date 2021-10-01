@@ -32,22 +32,24 @@ for i in range(len(df_travel)):
 print('Initializing...')
 random.seed()
 
+# Initialize population (partial)
 genetic = GeneticAlgorithm(indexList)
 
-geracoes = 0
-while True:
-    pop_mutada = [mutar(individuo) for individuo in populacao]
-    pop_crossover = crossover(populacao, pop_mutada)
+# Initialize generations count
+generations = 0
 
-    populacao = selecao(populacao + pop_mutada + pop_crossover)
+# Start evolution
+while generations <= 1000:
     
-    geracoes += 1
-    if geracoes % 50 == 0:
-        print(''.join(populacao[0]), geracoes)
-    # critério de parada
-    if fitness(populacao[0]) == len(meta):
-        break
-print('Finalizado!')
+    mutated = [mutar(individuo) for individuo in populacao]
+    crossover = crossover(populacao, pop_mutada)
+    selection = genetic.select(population + mutated + crossover)
+    
+    generations += 1
+
+
+
+print('Done!')
 
 
 # for ind in genetic.population:

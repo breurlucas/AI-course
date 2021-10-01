@@ -60,8 +60,9 @@ class GeneticAlgorithm():
 
         return value
 
-    def select(cls) -> int:
-        return 1
+    def select(self, population, cities, trips) -> list:
+        sortedList = sorted(population, key=self.fitness(cities,trips), reverse=True)
+        return sortedList
 
     def crossover(self, individual1: list[int], individual2: list[int]) -> list:
         # Get shortest individual to cut down
