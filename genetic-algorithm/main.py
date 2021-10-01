@@ -30,6 +30,13 @@ print(len(genetic.population))
 #         print(city.name)
 
 # Validation
-print(list(genetic.population[66]))
-flip = genetic.mutateFlip(list(genetic.population[66]), indexList)
-print(flip)
+# print(list(genetic.population[66]))
+# flip = genetic.mutateFlip(list(genetic.population[66]), indexList)
+# print(flip)
+
+listPaste = [0,1,2,3,4]
+listCut = [3,4,5]
+mid = 2
+listPaste[:mid] = listCut[:mid]
+
+print(listPaste)

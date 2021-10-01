@@ -1,5 +1,10 @@
+# Beatriz Paiva & Lucas Breur
+# 10-2021
+
+
 import itertools
 import random
+import math
 
 # Travelling Salesman Problem + Knapsack Problem (TSP + KP)
 
@@ -20,8 +25,26 @@ class GeneticAlgorithm():
     def select(cls) -> int:
         return 1
 
-    def crossover(self) -> int:
-        return 1
+    def crossover(self, list1, list2) -> list:
+        # Get shortest list to cut down
+        if len(list1) > len(list2):
+            listCut = list2
+            listPaste = list1
+        else:
+            listCut = list1
+            listPaste = list2
+
+        # Get rounded down midpoint
+        mid = math.floor(len(listCut)/2)
+
+        # Copy first halve of one list to the other
+        listPaste[:mid] = listCut[:mid]
+
+        # Replace duplicates in the remaining halve of the new list (Prevent invalid individuals)
+        # options = [x for x in indexList if x not in list]
+        # listPaste[mid + 1:]
+            
+        return listPaste
 
     def mutateSwap(self, list) -> list:
         positions = sorted(random.sample(range(0, len(list)), 2))
