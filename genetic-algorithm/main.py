@@ -15,7 +15,7 @@ trips = []
 
 # Genetic parameters
 mutationRate = 0.1 # Percentage
-crossoverRate = 0.05 # Percentage
+crossoverRate = 0.1 # Percentage
 mutated = []
 crossover = []
 
@@ -55,7 +55,7 @@ while True:
 
     mutated = [genetic.mutateRemove(individual) for individual in mutated]
     # mutated = [genetic.mutateSwap(individual) for individual in mutated]
-    mutated = [genetic.mutateFlip(individual) for individual in mutated]
+    # mutated = [genetic.mutateFlip(individual) for individual in mutated]
 
     # Get partial population randomly to crossover
     sample = random.sample(range(0, len(genetic.population)), math.floor(len(genetic.population) * crossoverRate))
@@ -69,7 +69,7 @@ while True:
     if generations % 1000 == 0:
         genetic.population = genetic.select(genetic.population + mutated + crossover)
 
-    if generations == 8000:
+    if generations == 2000:
         break
 
 # Check if a solution was found, if so, evaluate

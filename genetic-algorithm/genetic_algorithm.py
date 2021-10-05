@@ -120,8 +120,15 @@ class GeneticAlgorithm():
         paste[:mid] = cut[:mid]
 
         # Replace duplicates in the remaining halve of the new individual (Prevent invalid individuals)
-        # options = [x for x in indexList if x not in list]
-        # paste[mid + 1:]
+        optionsCutIndexes = [x for x in cut[mid + 1:] if x not in paste[mid + 1:]]
+        optionsAllIndexes = [x for x in self.indexList if x not in (cut and paste)]
+        for i in range(mid + 1, len(paste)):
+            if len(optionsCutIndexes) != 0 and (paste[i] not in optionsCutIndexes):
+                paste[i] = optionsCutIndexes[0]
+                optionsCutIndexes.pop(0)
+            elif len(optionsAllIndexes) != 0 and (paste[i] not in optionsCutIndexes):
+                paste[i] = optionsAllIndexes[0]
+                optionsAllIndexes.pop(0)
             
         return paste
 
