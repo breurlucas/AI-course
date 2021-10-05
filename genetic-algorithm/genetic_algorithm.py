@@ -4,25 +4,30 @@
 import itertools
 import random
 import math
+
+from numpy import empty
 from city import City
 from trip import Trip
 
 # Travelling Salesman Problem + Knapsack Problem (TSP + KP)
-
-MAX_SEQ_SIZE = 5
+POP_SIZE = 1000
 
 class GeneticAlgorithm():
 
     # Initialize the population
-    def __init__(self, indexList: list[int]) -> None:
+    def __init__(self, indexList: list[int], cities: list[City], trips: list[Trip]) -> None:
         self.population = []
+        self.cities = cities
+        self.trips = trips
+        self.indexList = indexList
         # Passing through every city, get every possible permutation.
-        for subset in itertools.permutations(indexList, MAX_SEQ_SIZE):
+        for i in range(POP_SIZE):
+            subset = random.sample(self.indexList, 13)
             self.population.append(subset)
 
-    def fitness(self, individual: list[int], cities: list[City], trips: list[Trip]) -> int:
+    def fitness(self, individual: list[int]) -> int:
         # Tranform index list in city list (objects)
-        mapped = [cities[i] for i in individual]
+        mapped = [self.cities[i] for i in individual]
 
         # Initialize variables
         weight = 0
@@ -40,18 +45,16 @@ class GeneticAlgorithm():
 
         for i in range(len(mapped) - 1):
             pair = [mapped[i].name, mapped[i+1].name]
-            print(pair)
             match = False
-            for trip in trips:
+            for trip in self.trips:
                 route = [trip.origin, trip.destination]
                 # Checks if there is a connection available, if so, calculates travel cost and time
                 if pair == route:
                     time += trip.tripTime # Check total travel time
                     value -= trip.tripCost # Check total travel cost
                     match = True
-                    print(route)
             if not match: # There is no connection available
-                return - 100000
+                return -100000
         
 
         # Evaluate time limit, if not exceeded, return value
@@ -60,18 +63,55 @@ class GeneticAlgorithm():
 
         return value
 
-    def select(self, population, cities, trips) -> list:
-        sortedList = sorted(population, key=self.fitness(cities,trips), reverse=True)
+    # Only to be run on solutions validated with 'fitness'. Returns detailed description
+    def fitness_evaluation(self, individual: list[int]) -> int:
+        # Tranform index list in city list (objects)
+        mapped = [self.cities[i] for i in individual]
+
+        # Initialize variables
+        weight = 0
+        theftTime = 0
+        tripTime = 0
+        itemValue = 0
+        tripCost = 0
+
+        for city in mapped:
+            weight += city.itemWeight # Check total weight
+            theftTime += city.theftTime # Check total theft time
+            itemValue += city.itemValue # Check total value of all items
+
+        for i in range(len(mapped) - 1):
+            pair = [mapped[i].name, mapped[i+1].name]
+            for trip in self.trips:
+                route = [trip.origin, trip.destination]
+                # Checks if there is a connection available, if so, calculates travel cost and time
+                if pair == route:
+                    tripTime += trip.tripTime # Check total travel time
+                    tripCost += trip.tripCost # Check total travel cost
+
+        solution = '''Total value of stolen gooods: {0}$\nTotal weight of stolen goods: {1}kg\nTime spent stealing: {2}h\nTime spent travelling: {3}h\nTravel costs: {4}$\nProfit: {5}$'''.format(itemValue, weight, theftTime, tripTime, tripCost, (itemValue - tripCost))
+
+        return solution
+
+    def select(self, population) -> list:
+        # Selection by tragedy. Eliminate 90% of the population
+        sortedList = sorted(population, key=self.fitness, reverse=True)
+        # Checks if the list is equal or larger than 10 to apply tragedy (For debugging only)
+        if len(sortedList) >= 10:
+            return sortedList[:math.floor(len(sortedList) * 0.1)]
+        
         return sortedList
 
     def crossover(self, individual1: list[int], individual2: list[int]) -> list:
         # Get shortest individual to cut down
-        if len(individual1) > len(individual2):
-            cut = individual2
-            paste = individual1
+        new1 = list(individual1)
+        new2 = list(individual2)
+        if len(new1) > len(new2):
+            cut = new2
+            paste = new1
         else:
-            cut = individual1
-            paste = individual2
+            cut = new1
+            paste = new2
 
         # Get rounded down midpoint
         mid = math.floor(len(cut)/2)
@@ -86,33 +126,36 @@ class GeneticAlgorithm():
         return paste
 
     def mutateSwap(self, individual: list[int]) -> list:
-        positions = sorted(random.sample(range(0, len(individual)), 2))
-        print(positions)
-        index_1 = individual.pop(positions[0])
-        print(index_1)
-        index_2 = individual.pop(positions[1] - 1)
-        print(index_2)
+        new = list(individual)
+        if len(individual) > 1:
+            positions = sorted(random.sample(range(0, len(new)), 2))
+            index_1 = new.pop(positions[0])
+            index_2 = new.pop(positions[1] - 1)
+            new.insert(positions[0], index_2)
+            new.insert(positions[1], index_1)
 
-        individual.insert(positions[0], index_2)
-        individual.insert(positions[1], index_1)
-
-        return individual
+        return new
     
     def mutateRemove(self, individual: list[int]) -> list:
-        if len(individual) > 1:
-            position = random.randint(0, len(individual) - 1)
-            individual.pop(position)
-        return individual
+        new = list(individual)
+        for i in range(1, random.randint(1, 13)):
+            position = random.randint(0, len(new) - 1)
+            # Don't make individuals with less than 3 cities
+            if len(new) > 3:
+                new.pop(position)
+        return new
 
-    def mutateFlip(self, individual: list[int], indexList: list[int]) -> list:
+    def mutateFlip(self, individual: list[int]) -> list:
+        new = list(individual)
         # Get options which are not in the individual
-        options = [x for x in indexList if x not in individual]
-        # Get random option
-        newIndex = options[random.randint(0, len(options) - 1)]
-        # Remove random index
-        position = random.randint(0, len(individual) - 1)
-        individual.pop(position)
-        # Insert new index in the same position
-        individual.insert(position, newIndex)
+        options = [x for x in self.indexList if x not in new]
+        # Get random option if available
+        if len(options) >= 1:
+            newIndex = options[random.randint(0, len(options) - 1)]
+            # Remove random index
+            position = random.randint(0, len(new) - 1)
+            new.pop(position)
+            # Insert new index in the same position
+            new.insert(position, newIndex)
 
-        return individual
+        return new
