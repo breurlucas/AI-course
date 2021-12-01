@@ -30,9 +30,9 @@ df_pivot = df_merged.pivot_table(index='userId', columns='title', values='rating
 # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.corr.html 
 
 
-# corr_matrix = df_pivot.corr(method='pearson', min_periods=50) # Consider only movies with the min amount of ratings
+corr_matrix = df_pivot.corr(method='pearson', min_periods=1) # Consider only movies with the min amount of ratings
 
-# pd.DataFrame(corr_matrix).to_csv('similarities.csv')
+pd.DataFrame(corr_matrix).to_csv('similarities.csv')
 
 # Recommend 10 movies for a new user
 
